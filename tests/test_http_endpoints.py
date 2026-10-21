@@ -18,6 +18,26 @@ async def test_health_check_endpoint():
 
 
 @pytest.mark.asyncio
+async def test_render_head_probes():
+    """Vérifie que les sondes Render (requêtes HEAD / et HEAD /health) répondent 200 OK."""
+    async with lifespan(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            # Render effectue un probe HEAD /
+            head_root = await client.head("/")
+            assert head_root.status_code == 200
+
+            # Render ou orchestrateur HEAD /health
+            head_health = await client.head("/health")
+            assert head_health.status_code == 200
+
+            # Probe HEAD /login
+            head_login = await client.head("/login")
+            assert head_login.status_code == 200
+
+
+
+@pytest.mark.asyncio
 async def test_security_headers_and_login_page():
     async with lifespan(app):
         transport = httpx.ASGITransport(app=app)

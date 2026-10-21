@@ -97,7 +97,7 @@ async def security_headers_middleware(request: Request, call_next):
 
 
 # Route de santé pour Render (Health Check)
-@app.get("/health", tags=["Monitoring"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["Monitoring"])
 async def health_check():
     """Endpoint de surveillance de santé pour le load balancer et Render."""
     return {

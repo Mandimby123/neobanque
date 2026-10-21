@@ -64,8 +64,10 @@ async def get_current_user(request: Request, db: AsyncSession = Depends(get_db))
 # ==============================================================================
 # ROUTES D'AUTHENTIFICATION
 # ==============================================================================
-@router.get("/login", response_class=HTMLResponse)
+@router.api_route("/login", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def login_page(request: Request, user: Optional[User] = Depends(get_current_user_optional)):
+    if request.method == "HEAD":
+        return Response(status_code=status.HTTP_200_OK)
     if user:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(

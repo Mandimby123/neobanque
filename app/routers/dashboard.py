@@ -19,12 +19,14 @@ router = APIRouter(prefix="", tags=["Dashboard & Comptes"])
 templates = Jinja2Templates(directory="app/templates")
 
 
-@router.get("/")
-async def root():
+@router.api_route("/", methods=["GET", "HEAD"])
+async def root(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=status.HTTP_200_OK)
     return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.get("/dashboard", response_class=HTMLResponse)
+@router.api_route("/dashboard", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def dashboard_view(
     request: Request,
     user: User = Depends(get_current_user),
