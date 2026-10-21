@@ -1,4 +1,5 @@
 import pytest
+import io
 import httpx
 from app.main import app, lifespan
 from app.core.security import create_access_token
@@ -60,4 +61,47 @@ async def test_rib_pdf_download():
             resp = await client.get("/accounts/1/rib/pdf")
             assert resp.status_code == 200
             assert resp.headers["Content-Type"] == "application/pdf"
-            assert resp.content.startswith(b"%PDF-")  # Magic bytes officiels PDF
+            assert resp.content.startswith(b"%PDF-")
+
+
+@pytest.mark.asyncio
+async def test_afb160_permission_corporate_vs_particulier():
+    """Vérifie que seuls les comptes Corporate ont accès à l'AFB 160 et que les Particuliers sont rejetés avec un code 403."""
+    async with lifespan(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            # User 1 = Corporate (demo@neobanque.fr, is_pro=True)
+            token_corp = create_access_token({"sub": "1"})
+            # User 2 = Particulier (particulier@neobanque.fr, is_pro=False)
+            token_part = create_access_token({"sub": "2"})
+
+            # 1. Test Client Particulier -> Accès refusé (403)
+            client.cookies.set("neobank_session", token_part)
+
+            sample_csv = b"Nom;Code Banque;Code Guichet;Compte;Cl\xc3\xa9;Montant;Libell\xc3\xa9\nSARL TEST;30004;02050;00012345678;44;100.00;TEST"
+            files = {"file": ("test.csv", sample_csv, "text/csv")}
+
+            resp_part_preview = await client.post("/transfers/afb160/preview", files=files)
+            assert resp_part_preview.status_code == 403
+            assert "Accès Restreint aux Clients Corporate" in resp_part_preview.text
+
+            resp_part_download = await client.post(
+                "/transfers/afb160/download",
+                data={
+                    "source_account_id": "1",
+                    "raw_csv": "test",
+                    "totp_code": "123456"
+                }
+            )
+            assert resp_part_download.status_code == 403
+
+            # Page transferts particulier : affiche le message de restriction
+            resp_transfers_part = await client.get("/transfers")
+            assert resp_transfers_part.status_code == 200
+            assert "R\xc3\x89SERV\xc3\x89 CORPORATE" in resp_transfers_part.text or "RÉSERVÉ CORPORATE" in resp_transfers_part.text
+
+            # 2. Test Client Corporate -> Accès autorisé (200)
+            client.cookies.set("neobank_session", token_corp)
+            resp_corp_preview = await client.post("/transfers/afb160/preview", files=files)
+            assert resp_corp_preview.status_code == 200
+            assert "G\xc3\xa9n\xc3\xa9ration du Fichier Officiel AFB 160" in resp_corp_preview.text or "Génération du Fichier Officiel AFB 160" in resp_corp_preview.text

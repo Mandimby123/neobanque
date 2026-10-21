@@ -304,6 +304,21 @@ async def preview_afb160_csv(
     file: UploadFile = File(...),
     user: User = Depends(get_current_user)
 ):
+    if not user.is_pro:
+        return HTMLResponse(
+            """
+            <div class="p-4 bg-amber-950/90 border border-amber-800 text-amber-200 rounded-2xl text-xs flex items-center space-x-3">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <div>
+                    <span class="font-bold block">Accès Restreint aux Clients Corporate</span>
+                    <span>L'émission et l'analyse de fichiers de virements de masse AFB 160 sont réservées aux comptes professionnels et entreprises.</span>
+                </div>
+            </div>
+            """,
+            status_code=403
+        )
     try:
         content_bytes = await file.read()
         csv_text = content_bytes.decode("utf-8", errors="replace")
@@ -336,6 +351,12 @@ async def download_afb160_file(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    if not user.is_pro:
+        return HTMLResponse(
+            "<div class='p-3 bg-rose-950 border border-rose-800 text-rose-300 rounded-xl text-xs'>Action réservée aux comptes Corporate.</div>",
+            status_code=403
+        )
+
     ip = request.client.host if request.client else "127.0.0.1"
     ua = request.headers.get("User-Agent", "Unknown")
 

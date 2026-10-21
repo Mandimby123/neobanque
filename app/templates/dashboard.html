@@ -14,7 +14,7 @@
             <div>
                 <div class="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-brand-400 mb-1">
                     <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse"></span>
-                    <span>Compte Principal Certifié &bull; Espace Personnel</span>
+                    <span>Compte {% if user.is_pro %}Corporate / Entreprise{% else %}Particulier{% endif %} Certifié &bull; Espace Sécurisé</span>
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                     Bonjour, {{ user.full_name }}
@@ -51,10 +51,12 @@
                 <i data-lucide="send" class="w-4 h-4"></i>
                 <span>Nouveau Virement</span>
             </a>
+            {% if user.is_pro %}
             <a href="/transfers#afb160" class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs border border-slate-700 transition-colors">
                 <i data-lucide="files" class="w-4 h-4 text-brand-400"></i>
                 <span>Virements Groupés AFB 160</span>
             </a>
+            {% endif %}
             <a href="/cards" class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs border border-slate-700 transition-colors">
                 <i data-lucide="credit-card" class="w-4 h-4 text-brand-400"></i>
                 <span>Gérer mes Cartes</span>

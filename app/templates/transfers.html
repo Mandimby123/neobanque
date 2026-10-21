@@ -76,13 +76,17 @@
 
     <!-- Mass Transfer AFB 160 Section -->
     <div id="afb160" class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+        {% if user.is_pro %}
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center space-x-3">
                 <div class="p-2.5 bg-brand-500/10 rounded-xl text-brand-400 border border-brand-500/20">
                     <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h2 class="text-lg font-bold text-white tracking-tight">Virements de Masse & Norme AFB 160 / CFONB</h2>
+                    <div class="flex items-center space-x-2">
+                        <h2 class="text-lg font-bold text-white tracking-tight">Virements de Masse & Norme AFB 160 / CFONB</h2>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-500/10 text-brand-300 border border-brand-500/30">CORPORATE</span>
+                    </div>
                     <p class="text-xs text-slate-400">Importez une liste de virements (salaires, factures fournisseurs) et générez le fichier conforme 160 caractères.</p>
                 </div>
             </div>
@@ -118,6 +122,30 @@
 
         <!-- Preview Container -->
         <div id="afb160-preview-container"></div>
+        {% else %}
+        <!-- Vue Client Particulier : Accès restreint -->
+        <div class="flex flex-col sm:flex-row items-center justify-between p-6 bg-slate-950/80 rounded-2xl border border-slate-800 gap-4">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 flex-shrink-0">
+                    <i data-lucide="lock" class="w-6 h-6 text-slate-400"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h3 class="text-base font-bold text-white tracking-tight">Virements de Masse AFB 160</h3>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700">RÉSERVÉ CORPORATE</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1 max-w-xl">
+                        En tant que <b>client particulier</b>, vous bénéficiez du service complet de virements unitaires SEPA instantanés ci-dessus. 
+                        La génération de lots de télétransmission interbancaire AFB 160 / CFONB (fichiers de paie et paiements groupés) est exclusivement réservée aux comptes professionnels et entreprises.
+                    </p>
+                </div>
+            </div>
+            <div class="text-xs text-slate-500 font-mono self-start sm:self-auto bg-slate-900 px-3.5 py-2 rounded-xl border border-slate-800 flex items-center space-x-1.5 whitespace-nowrap">
+                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                <span>Compte Particulier</span>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
 </div>
