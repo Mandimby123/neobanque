@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Journal d'Audit & Traçabilité PCI-DSS | NéoBanque{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-brand-400 mb-1">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                <span>Traçabilité Immuable Réglementaire & Sécurité Bancaire</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Journal d'Audit des Actions Sensibles
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                Enregistrement inaltérable des connexions, virements, révélations de numéros de carte et exports de fichiers.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl self-start sm:self-auto">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Normes ACPR &bull; PCI-DSS Req. 10</span>
+        </div>
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-950/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-sans">
+                    <tr>
+                        <th class="p-4">Horodatage (UTC)</th>
+                        <th class="p-4">Action Sensible</th>
+                        <th class="p-4">Statut</th>
+                        <th class="p-4">Adresse IP</th>
+                        <th class="p-4">Navigateur / User-Agent</th>
+                        <th class="p-4">Détails Techniques</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60 font-mono text-slate-300">
+                    {% for log in logs %}
+                    <tr class="hover:bg-slate-900/50 transition-colors">
+                        <!-- Date -->
+                        <td class="p-4 text-slate-400 whitespace-nowrap">
+                            {{ log.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}
+                        </td>
+
+                        <!-- Action Badge -->
+                        <td class="p-4 font-sans whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold 
+                                {% if 'LOGIN' in log.action %}
+                                    bg-blue-500/10 text-blue-400 border border-blue-500/20
+                                {% elif 'TRANSFER' in log.action %}
+                                    bg-brand-500/10 text-brand-300 border border-brand-500/20
+                                {% elif 'CARD' in log.action %}
+                                    bg-purple-500/10 text-purple-300 border border-purple-500/20
+                                {% elif 'AFB160' in log.action or 'RIB' in log.action %}
+                                    bg-teal-500/10 text-teal-300 border border-teal-500/20
+                                {% else %}
+                                    bg-slate-800 text-slate-300 border border-slate-700
+                                {% endif %}">
+                                {{ log.action }}
+                            </span>
+                        </td>
+
+                        <!-- Status -->
+                        <td class="p-4 whitespace-nowrap">
+                            {% if log.status == 'SUCCESS' %}
+                            <span class="inline-flex items-center text-emerald-400 text-[11px] font-bold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+                                SUCCÈS
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center text-rose-400 text-[11px] font-bold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-400 mr-1.5"></span>
+                                ÉCHEC
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- IP -->
+                        <td class="p-4 text-slate-400 whitespace-nowrap">
+                            {{ log.ip_address }}
+                        </td>
+
+                        <!-- User Agent -->
+                        <td class="p-4 text-slate-500 font-sans text-[11px] truncate max-w-[180px]" title="{{ log.user_agent }}">
+                            {{ log.user_agent }}
+                        </td>
+
+                        <!-- Details JSON -->
+                        <td class="p-4 text-slate-400 text-[11px] max-w-xs truncate" title="{{ log.details }}">
+                            <code class="bg-slate-950 px-2 py-1 rounded border border-slate-800 text-[10px] text-brand-300">
+                                {{ log.details }}
+                            </code>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not logs %}
+        <div class="p-12 text-center text-slate-500">
+            <i data-lucide="shield-off" class="w-10 h-10 mx-auto text-slate-600 mb-2"></i>
+            <p class="text-sm">Aucun événement d'audit enregistré pour le moment.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+

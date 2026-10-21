@@ -1,0 +1,99 @@
+<div id="rib-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+    <div class="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+        
+        <!-- Header -->
+        <div class="flex items-start justify-between border-b border-slate-800 pb-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-brand-500/10 rounded-xl text-brand-400 border border-brand-500/20">
+                    <i data-lucide="file-badge" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white tracking-tight">Relevé d'Identité Bancaire (RIB)</h3>
+                    <p class="text-xs text-slate-400">{{ account.name }} &bull; {{ user.full_name }}</p>
+                </div>
+            </div>
+            
+            <button onclick="document.getElementById('rib-modal').remove()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Coordonnées Nationales (RIB) -->
+        <div class="space-y-3">
+            <span class="text-xs uppercase tracking-wider font-semibold text-brand-400 block">Identifiants Nationaux (Norme Banque de France)</span>
+            
+            <div class="grid grid-cols-4 gap-2 bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center font-mono text-xs">
+                <div>
+                    <span class="text-[10px] text-slate-500 block font-sans">Code Banque</span>
+                    <span class="text-white font-bold select-all">{{ account.bank_code }}</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-500 block font-sans">Code Guichet</span>
+                    <span class="text-white font-bold select-all">{{ account.branch_code }}</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-500 block font-sans">N° de Compte</span>
+                    <span class="text-white font-bold select-all">{{ account.account_number }}</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-500 block font-sans">Clé RIB</span>
+                    <span class="text-brand-400 font-bold select-all">{{ account.rib_key }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coordonnées Internationales (IBAN / BIC) -->
+        <div class="space-y-3">
+            <span class="text-xs uppercase tracking-wider font-semibold text-brand-400 block">Identifiants Internationaux SEPA (ISO 13616)</span>
+
+            <!-- IBAN -->
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] text-slate-500 block uppercase font-sans font-semibold">Numéro IBAN</span>
+                    <span class="text-sm sm:text-base font-mono font-bold text-white tracking-wider select-all">{{ formatted_iban }}</span>
+                </div>
+                <button 
+                    onclick="copyToClipboard('{{ account.iban }}', 'IBAN')" 
+                    type="button" 
+                    class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors" 
+                    title="Copier IBAN">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- BIC / SWIFT -->
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] text-slate-500 block uppercase font-sans font-semibold">Code BIC / SWIFT</span>
+                    <span class="text-sm font-mono font-bold text-white tracking-widest select-all">{{ account.bic }}</span>
+                </div>
+                <button 
+                    onclick="copyToClipboard('{{ account.bic }}', 'Code BIC')" 
+                    type="button" 
+                    class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors" 
+                    title="Copier BIC">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Actions Téléchargement PDF & Fermeture -->
+        <div class="pt-2 flex items-center justify-between space-x-3">
+            <a 
+                href="/accounts/{{ account.id }}/rib/pdf" 
+                class="flex-1 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-brand-500/20 flex items-center justify-center space-x-2">
+                <i data-lucide="file-down" class="w-4 h-4"></i>
+                <span>Télécharger le RIB Officiel (PDF)</span>
+            </a>
+
+            <button 
+                type="button" 
+                onclick="document.getElementById('rib-modal').remove()" 
+                class="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors">
+                Fermer
+            </button>
+        </div>
+
+    </div>
+</div>
+

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NéoBanque | Portail Core Banking Sécurisé{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN avec configuration personnalisée -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        dark: {
+                            800: '#1e293b',
+                            850: '#172033',
+                            900: '#0f172a',
+                            950: '#080d1a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- HTMX CDN -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Smooth fade & transitions HTMX */
+        .htmx-indicator {
+            display: none;
+            transition: opacity 200ms ease-in;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline-flex;
+        }
+        .htmx-request.htmx-indicator {
+            display: inline-flex;
+        }
+
+        /* 3D Bank Card Flip */
+        .card-perspective {
+            perspective: 1000px;
+        }
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .card-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Shake animation for errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased bg-slate-950 text-slate-100 selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-6">
+                <a href="/dashboard" class="flex items-center space-x-3 group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-emerald-500 to-teal-400 p-0.5 shadow-lg shadow-brand-500/20 group-hover:shadow-brand-500/40 transition-all duration-300">
+                        <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                            <i data-lucide="shield-check" class="w-5 h-5 text-brand-400 group-hover:scale-110 transition-transform"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-lg font-bold tracking-tight text-white flex items-center">
+                            NÉO<span class="text-brand-400">BANQUE</span>
+                        </span>
+                        <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold block -mt-1">Core Banking Portal</span>
+                    </div>
+                </a>
+
+                {% if user %}
+                <!-- Navigation Links -->
+                <nav class="hidden md:flex items-center space-x-1 pl-4">
+                    <a href="/dashboard" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center space-x-2">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i>
+                        <span>Tableau de bord</span>
+                    </a>
+                    <a href="/transfers" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center space-x-2">
+                        <i data-lucide="arrow-left-right" class="w-4 h-4 text-slate-400"></i>
+                        <span>Virements & AFB 160</span>
+                    </a>
+                    <a href="/cards" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center space-x-2">
+                        <i data-lucide="credit-card" class="w-4 h-4 text-slate-400"></i>
+                        <span>Mes Cartes</span>
+                    </a>
+                    <a href="/audit" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center space-x-2">
+                        <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+                        <span>Audit & PCI-DSS</span>
+                    </a>
+                </nav>
+                {% endif %}
+            </div>
+
+            <!-- Right Profile & Security Badges -->
+            <div class="flex items-center space-x-3">
+                <!-- Environment Badge -->
+                <div class="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse"></span>
+                    <span class="font-mono text-[11px] font-medium text-slate-400">CBS MOCK SANDBOX</span>
+                </div>
+
+                {% if user %}
+                <div class="flex items-center space-x-3 pl-2">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-xs font-semibold text-white">{{ user.full_name }}</div>
+                        <div class="text-[11px] text-slate-400 font-mono">{{ user.email }}</div>
+                    </div>
+                    <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-brand-400 shadow-inner">
+                        {{ user.full_name[:2].upper() }}
+                    </div>
+                    <a href="/logout" title="Déconnexion" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800/60 rounded-lg transition-colors">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Modal Container for HTMX -->
+    <div id="modal-container"></div>
+
+    <!-- Global Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="lock" class="w-3.5 h-3.5 text-brand-400"></i>
+                <span>Chiffrement PCI-DSS Tier 1 &bull; mTLS Core Banking ISO 20022 &bull; Normes CFONB AFB 160</span>
+            </div>
+            <div>
+                <span>&copy; 2026 NéoBanque France &bull; Établissement agréé ACPR</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Init Lucide Icons -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+        });
+        document.body.addEventListener("htmx:afterSwap", () => {
+            lucide.createIcons();
+        });
+        document.body.addEventListener("htmx:afterSettle", () => {
+            lucide.createIcons();
+        });
+
+        // Helper pour copie dans le presse-papier avec notification
+        function copyToClipboard(text, label) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`Copié : ${label}`, 'success');
+            }).catch(() => {
+                showToast('Erreur lors de la copie', 'error');
+            });
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'success' ? 'bg-emerald-950 border-emerald-700 text-emerald-200' : (type === 'error' ? 'bg-rose-950 border-rose-700 text-rose-200' : 'bg-slate-900 border-slate-700 text-slate-200');
+            toast.className = `p-3 rounded-xl border shadow-xl text-xs font-medium transition-all transform duration-300 pointer-events-auto flex items-center space-x-2 ${bg}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Toggle balance visibility
+        let isBalanceHidden = false;
+        function toggleBalanceVisibility() {
+            isBalanceHidden = !isBalanceHidden;
+            document.querySelectorAll('.balance-display').forEach(el => {
+                const actual = el.getAttribute('data-balance');
+                el.textContent = isBalanceHidden ? '•••••• €' : actual;
+            });
+            const eyeIcon = document.getElementById('eye-icon');
+            if (eyeIcon) {
+                eyeIcon.setAttribute('data-lucide', isBalanceHidden ? 'eye-off' : 'eye');
+                lucide.createIcons();
+            }
+        }
+    </script>
+</body>
+</html>
+

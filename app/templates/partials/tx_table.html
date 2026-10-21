@@ -1,0 +1,97 @@
+<div class="space-y-3">
+    {% if transactions %}
+    <div class="divide-y divide-slate-800/80">
+        {% for tx in transactions %}
+        <div class="py-3.5 flex items-center justify-between hover:bg-slate-900/40 px-2 rounded-xl transition-colors">
+            <!-- Left Info -->
+            <div class="flex items-center space-x-3.5">
+                <!-- Icon based on type -->
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 
+                    {% if tx.amount > 0 %}
+                        bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                    {% elif tx.transaction_type.value == 'CARD_PAYMENT' %}
+                        bg-teal-500/10 text-teal-400 border border-teal-500/20
+                    {% else %}
+                        bg-slate-800 text-slate-300 border border-slate-700
+                    {% endif %}">
+                    {% if tx.amount > 0 %}
+                        <i data-lucide="arrow-down-left" class="w-5 h-5"></i>
+                    {% elif tx.transaction_type.value == 'CARD_PAYMENT' %}
+                        <i data-lucide="credit-card" class="w-5 h-5"></i>
+                    {% elif tx.transaction_type.value == 'FEE' %}
+                        <i data-lucide="receipt" class="w-5 h-5"></i>
+                    {% else %}
+                        <i data-lucide="arrow-up-right" class="w-5 h-5"></i>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <div class="text-xs sm:text-sm font-bold text-white tracking-tight flex items-center space-x-2">
+                        <span>{{ tx.counterparty_name }}</span>
+                        {% if tx.transaction_type.value == 'CARD_PAYMENT' %}
+                        <span class="text-[9px] uppercase font-mono bg-slate-800 text-teal-300 px-1.5 py-0.2 rounded border border-slate-700">CB</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-[11px] text-slate-400 truncate max-w-[200px] sm:max-w-xs">{{ tx.label }}</div>
+                    <div class="text-[10px] text-slate-500 font-mono mt-0.5">
+                        {{ tx.execution_date.strftime('%d/%m/%Y à %H:%M') }} &bull; Réf : {{ tx.reference }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Amount -->
+            <div class="text-right flex-shrink-0">
+                <div class="text-xs sm:text-sm font-mono font-extrabold tracking-tight 
+                    {% if tx.amount > 0 %}
+                        text-emerald-400
+                    {% else %}
+                        text-slate-100
+                    {% endif %}">
+                    {% if tx.amount > 0 %}+{% endif %}{{ '%.2f'|format(tx.amount) }} €
+                </div>
+                <span class="inline-flex items-center text-[10px] font-semibold text-emerald-400 mt-0.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1"></span>
+                    Exécuté
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+        <div>
+            <span>Page <b class="text-white">{{ page }}</b></span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            {% if page > 1 %}
+            <button 
+                hx-get="/transactions?page={{ page - 1 }}{% if account_id %}&account_id={{ account_id }}{% endif %}{% if tx_type %}&tx_type={{ tx_type }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                hx-target="#transactions-table-container"
+                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors flex items-center space-x-1">
+                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                <span>Précédent</span>
+            </button>
+            {% endif %}
+
+            {% if has_next %}
+            <button 
+                hx-get="/transactions?page={{ page + 1 }}{% if account_id %}&account_id={{ account_id }}{% endif %}{% if tx_type %}&tx_type={{ tx_type }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                hx-target="#transactions-table-container"
+                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors flex items-center space-x-1">
+                <span>Suivant</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <div class="p-8 text-center text-slate-500 space-y-2">
+        <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-600"></i>
+        <p class="text-xs">Aucune opération trouvée pour ces critères de recherche.</p>
+    </div>
+    {% endif %}
+</div>
+

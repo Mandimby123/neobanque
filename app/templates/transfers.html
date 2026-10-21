@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Virements & AFB 160 | NéoBanque{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-brand-400 mb-1">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Transferts Interbancaires SEPA & Normes CFONB</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Virements Unitaires & de Masse
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                Émettez des virements SEPA unitaires sécurisés par 2FA ou générez des fichiers normalisés AFB 160.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Grid (Unit Stepper & Beneficiaries) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Unit Transfer Stepper (7 Cols) -->
+        <div class="lg:col-span-7 space-y-6">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+                <div class="flex items-center space-x-2.5 mb-6">
+                    <i data-lucide="arrow-right-left" class="w-5 h-5 text-brand-400"></i>
+                    <h2 class="text-lg font-bold text-white tracking-tight">Virement Bancaire Unitaire</h2>
+                </div>
+
+                <!-- HTMX Stepper Container -->
+                <div id="transfer-stepper">
+                    {% include "partials/transfer_step1.html" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Beneficiaries Drawer (5 Cols) -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="users" class="w-5 h-5 text-brand-400"></i>
+                        <h3 class="text-base font-bold text-white tracking-tight">Bénéficiaires Enregistrés</h3>
+                    </div>
+                    <button 
+                        type="button" 
+                        onclick="document.getElementById('add-beneficiary-modal').classList.remove('hidden')"
+                        class="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-semibold transition-colors flex items-center space-x-1">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Ajouter</span>
+                    </button>
+                </div>
+
+                <div id="beneficiaries-list" class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                    {% for ben in beneficiaries %}
+                    <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 hover:border-slate-700 transition-colors flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-white">{{ ben.name }}</div>
+                            <div class="text-[11px] font-mono text-slate-400 mt-0.5">{{ format_iban(ben.iban) }}</div>
+                        </div>
+                        <span class="text-[10px] font-mono font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
+                            Clé {{ ben.rib_key }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Mass Transfer AFB 160 Section -->
+    <div id="afb160" class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-brand-500/10 rounded-xl text-brand-400 border border-brand-500/20">
+                    <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-white tracking-tight">Virements de Masse & Norme AFB 160 / CFONB</h2>
+                    <p class="text-xs text-slate-400">Importez une liste de virements (salaires, factures fournisseurs) et générez le fichier conforme 160 caractères.</p>
+                </div>
+            </div>
+            
+            <button 
+                type="button" 
+                onclick="loadSampleCSV()"
+                class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center space-x-1.5 transition-colors self-start sm:self-auto">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-400"></i>
+                <span>Charger un exemple de lot CSV</span>
+            </button>
+        </div>
+
+        <!-- Formulaire de téléversement CSV -->
+        <form hx-post="/transfers/afb160/preview" hx-target="#afb160-preview-container" hx-swap="innerHTML" enctype="multipart/form-data" class="space-y-4">
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <input 
+                    id="csv-file-input"
+                    type="file" 
+                    name="file" 
+                    accept=".csv,.txt" 
+                    required
+                    class="block w-full text-xs text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-brand-300 hover:file:bg-slate-700 cursor-pointer bg-slate-950 p-2 rounded-2xl border border-slate-800">
+                
+                <button 
+                    type="submit" 
+                    class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap shadow-lg shadow-brand-500/20 flex items-center justify-center space-x-1.5">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                    <span>Analyser & Valider</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Preview Container -->
+        <div id="afb160-preview-container"></div>
+    </div>
+
+</div>
+
+<!-- Modal Ajout Bénéficiaire avec Validation Modulo 97 -->
+<div id="add-beneficiary-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+    <div class="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="user-plus" class="w-5 h-5 text-brand-400"></i>
+                <h3 class="text-base font-bold text-white">Nouveau Bénéficiaire (RIB)</h3>
+            </div>
+            <button type="button" onclick="document.getElementById('add-beneficiary-modal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div id="quick-add-feedback"></div>
+
+        <form hx-post="/beneficiaries/quick-add" hx-target="#quick-add-feedback" hx-swap="innerHTML" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Nom / Raison Sociale</label>
+                <input type="text" name="name" required placeholder="Ex: Cabinet Meunier" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Code Banque (5)</label>
+                    <input type="text" name="bank_code" required maxlength="5" value="30004" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white font-mono text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Code Guichet (5)</label>
+                    <input type="text" name="branch_code" required maxlength="5" value="02050" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white font-mono text-xs">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">N° de Compte (11)</label>
+                    <input type="text" name="account_number" required maxlength="11" placeholder="00012345678" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white font-mono text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Clé RIB (2)</label>
+                    <input type="text" name="rib_key" maxlength="2" placeholder="Auto" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-brand-400 font-mono text-xs" title="Laissez vide pour calcul automatique Modulo 97">
+                </div>
+            </div>
+
+            <div class="text-[11px] text-slate-400">
+                La clé RIB sera calculée et validée automatiquement par le système selon la formule modulo 97 officielle de la Banque de France.
+            </div>
+
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs transition-all shadow-lg shadow-brand-500/20">
+                Valider & Enregistrer le Bénéficiaire
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function loadSampleCSV() {
+        const sample = `Nom;Code Banque;Code Guichet;Compte;Clé;Montant;Libellé
+SARL TECH CONSULTING;30004;02050;00012345678;44;1450.00;FACTURE NO 2026-081
+CABINET DUPONT;30004;02050;00098765432;54;820.50;HONORAIRES COMPTABLES
+EDF COMMERCE;30004;02050;00055566677;51;340.00;ELECTRICITE Q3 2026
+SALARIE PIERRE MARTIN;30004;02050;00099999999;07;3200.00;SALAIRE OCTOBRE 2026`;
+        
+        const blob = new Blob([sample], { type: 'text/csv' });
+        const file = new File([blob], 'virements_masse_demo.csv', { type: 'text/csv' });
+        
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        document.getElementById('csv-file-input').files = dataTransfer.files;
+
+        showToast('Fichier CSV d\'exemple chargé ! Cliquez sur "Analyser & Valider"', 'success');
+    }
+</script>
+{% endblock %}

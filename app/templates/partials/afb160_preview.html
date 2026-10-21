@@ -1,0 +1,113 @@
+<div class="space-y-6 animate-fade-in">
+    
+    <!-- Résumé de validation -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+            <span class="text-xs uppercase text-slate-500 font-semibold block">Virements Valides</span>
+            <span class="text-2xl font-bold font-mono text-emerald-400">{{ items|length }}</span>
+        </div>
+        <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+            <span class="text-xs uppercase text-slate-500 font-semibold block">Montant Cumulé</span>
+            <span class="text-2xl font-bold font-mono text-white">{{ '%.2f'|format(total_amount) }} €</span>
+        </div>
+        <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+            <span class="text-xs uppercase text-slate-500 font-semibold block">Erreurs Détectées</span>
+            <span class="text-2xl font-bold font-mono {% if errors %}text-rose-400{% else %}text-slate-400{% endif %}">{{ errors|length }}</span>
+        </div>
+    </div>
+
+    <!-- Alertes d'erreurs éventuelles -->
+    {% if errors %}
+    <div class="p-4 bg-rose-950/80 border border-rose-800 rounded-2xl text-xs text-rose-300 space-y-1">
+        <div class="font-bold flex items-center space-x-1.5 mb-1">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
+            <span>Lignes ignorées pour non-conformité bancaire :</span>
+        </div>
+        {% for err in errors %}
+        <div class="font-mono pl-5">&bull; {{ err }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Tableau de prévisualisation des lignes 06 -->
+    {% if items %}
+    <div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/50">
+        <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                <tr>
+                    <th class="p-3">Bénéficiaire</th>
+                    <th class="p-3">Banque</th>
+                    <th class="p-3">Guichet</th>
+                    <th class="p-3">N° Compte</th>
+                    <th class="p-3">Clé</th>
+                    <th class="p-3">Montant</th>
+                    <th class="p-3">Libellé</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 font-mono text-slate-300">
+                {% for itm in items[:8] %}
+                <tr class="hover:bg-slate-900/40">
+                    <td class="p-3 font-sans font-medium text-white">{{ itm.recipient_name }}</td>
+                    <td class="p-3">{{ itm.bank_code }}</td>
+                    <td class="p-3">{{ itm.branch_code }}</td>
+                    <td class="p-3">{{ itm.account_number }}</td>
+                    <td class="p-3 text-brand-400">{{ itm.rib_key }}</td>
+                    <td class="p-3 font-bold text-white">{{ '%.2f'|format(itm.amount) }} €</td>
+                    <td class="p-3 font-sans text-slate-400 truncate max-w-[120px]">{{ itm.label }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if items|length > 8 %}
+        <div class="p-2 text-center text-[11px] text-slate-500 bg-slate-900/40 border-t border-slate-800">
+            ... et {{ items|length - 8 }} autres virements conformes
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Formulaire d'export et validation 2FA -->
+    <form action="/transfers/afb160/download" method="POST" class="p-5 bg-slate-900/80 rounded-2xl border border-brand-500/30 space-y-4">
+        <input type="hidden" name="raw_csv" value="{{ raw_csv }}">
+
+        <div class="flex items-center space-x-2 text-brand-400 font-semibold text-xs uppercase tracking-wider">
+            <i data-lucide="file-check" class="w-4 h-4"></i>
+            <span>Génération du Fichier Officiel AFB 160 (CFONB)</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label for="afb_source_account" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+                    Compte Émetteur (Donneur d'ordre)
+                </label>
+                <select id="afb_source_account" name="source_account_id" required class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs">
+                    <option value="1">Compte Courant Principal (30004 02050 00012345678)</option>
+                    <option value="3">Compte Professionnel SARL (30004 02050 00055566677)</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="afb_totp" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+                    Code 2FA TOTP (Obligatoire)
+                </label>
+                <input 
+                    id="afb_totp" 
+                    name="totp_code" 
+                    type="text" 
+                    maxlength="6" 
+                    placeholder="123456" 
+                    required 
+                    class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-brand-400 font-mono tracking-widest text-xs">
+            </div>
+        </div>
+
+        <button 
+            type="submit" 
+            class="w-full py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-brand-500/20 flex items-center justify-center space-x-2">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Télécharger le Fichier AFB 160 (.txt normalisé 160 car.)</span>
+        </button>
+    </form>
+    {% endif %}
+
+</div>
+

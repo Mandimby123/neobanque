@@ -1,0 +1,60 @@
+services:
+  web:
+    build: .
+    container_name: neobank_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - DATABASE_URL=postgresql+asyncpg://neouser:neopassword@postgres:5432/neobank
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=ba8f4491ad33375cf9291e268d85c5646ab8b8cc563c301fa0dabb5ec4b77e80
+      - CARD_ENCRYPTION_KEY=HooHd-zYeuRqjmfbcvL3fQBr8WaHls8mVISfaIhen5A=
+      - USE_MOCK_BANKING=true
+      - COOKIE_SECURE=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: neobank_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: neouser
+      POSTGRES_PASSWORD: neopassword
+      POSTGRES_DB: neobank
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neouser -d neobank"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: neobank_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
+

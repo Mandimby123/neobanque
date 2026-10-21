@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Base de données locale de dev
+*.db
+*.sqlite
+*.sqlite3
+neobank.db
+
+# Environnement et secrets
+.env
+.env.local
+
+# Tests et caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE et OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Validation TOTP 2FA | NéoBanque{% endblock %}
+
+{% block content %}
+<div class="min-h-[75vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center">
+            <div class="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-teal-400 shadow-xl shadow-brand-500/20 mb-4">
+                <i data-lucide="smartphone" class="w-8 h-8 text-white"></i>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                Authentification à Deux Facteurs
+            </h2>
+            <p class="mt-2 text-sm text-slate-400">
+                Saisissez le code temporaire à 6 chiffres généré par votre application d'authentification (Google Authenticator, Authy, etc.).
+            </p>
+        </div>
+
+        <!-- Error Message Alert -->
+        {% if error %}
+        <div class="p-4 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-sm flex items-center space-x-3 animate-shake">
+            <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0 text-rose-400"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <!-- TOTP Verification Form -->
+        <form class="mt-6 space-y-6 bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-8 rounded-2xl shadow-2xl text-center" action="/auth/totp" method="POST">
+            <div>
+                <label for="code" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-3">
+                    Code de Sécurité (6 chiffres)
+                </label>
+                <div class="flex justify-center">
+                    <input id="code" name="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" required autofocus
+                        class="block w-64 py-3 text-center text-3xl font-mono tracking-[0.5em] bg-slate-950 border border-slate-700 rounded-xl text-brand-400 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all shadow-inner"
+                        placeholder="••••••" autocomplete="one-time-code">
+                </div>
+            </div>
+
+            <!-- Aide & Clé de démo -->
+            <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-400 text-left">
+                <div class="flex items-center space-x-2 text-brand-400 font-semibold mb-1">
+                    <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                    <span>Tester le TOTP sans application externe :</span>
+                </div>
+                <p class="text-[11px] leading-relaxed">
+                    Si vous utilisez la clé de démonstration <code class="text-teal-300 select-all">JBSWY3DPEHPK3PXP</code>, vous pouvez générer le code actuel via Python ou un générateur TOTP en ligne, ou utiliser le bouton ci-dessous pour copier le code actuel simulé :
+                </p>
+                <button type="button" onclick="fillCurrentDemoCode()" class="mt-2 text-xs text-brand-400 hover:text-brand-300 underline font-medium">
+                    &rarr; Insérer automatiquement le code TOTP actuel
+                </button>
+            </div>
+
+            <div>
+                <button type="submit"
+                    class="w-full py-3 px-4 rounded-xl font-semibold text-sm text-slate-950 bg-gradient-to-r from-brand-400 to-emerald-400 hover:from-brand-300 hover:to-emerald-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 shadow-lg shadow-brand-500/25 transition-all duration-200 flex items-center justify-center space-x-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span>Confirmer la connexion</span>
+                </button>
+            </div>
+
+            <div class="text-center pt-1">
+                <a href="/login" class="text-xs text-slate-400 hover:text-slate-200 transition-colors">
+                    &larr; Revenir à la page de connexion
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+    // Algorithme TOTP JS léger pour faciliter la démo immédiate en un clic
+    async function fillCurrentDemoCode() {
+        const secret = "JBSWY3DPEHPK3PXP";
+        // Calcul du code TOTP standard RFC 6238 en JS
+        function dec2hex(s) { return (s < 15.5 ? "0" : "") + Math.round(s).toString(16); }
+        function hex2dec(s) { return parseInt(s, 16); }
+        function base32tohex(base32) {
+            var base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            var bits = "";
+            var hex = "";
+            for (var i = 0; i < base32.length; i++) {
+                var val = base32chars.indexOf(base32.charAt(i).toUpperCase());
+                bits += leftpad(val.toString(2), 5, '0');
+            }
+            for (var i = 0; i + 4 <= bits.length; i += 4) {
+                var chunk = bits.substr(i, 4);
+                hex = hex + parseInt(chunk, 2).toString(16);
+            }
+            return hex;
+        }
+        function leftpad(str, len, pad) {
+            if (len + 1 >= str.length) {
+                str = Array(len + 1 - str.length).join(pad) + str;
+            }
+            return str;
+        }
+
+        const epoch = Math.round(new Date().getTime() / 1000.0);
+        const time = leftpad(dec2hex(Math.floor(epoch / 30)), 16, "0");
+        
+        // Utiliser Crypto Web API pour HMAC-SHA1
+        const keyHex = base32tohex(secret);
+        const keyBytes = new Uint8Array(keyHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const timeBytes = new Uint8Array(time.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+        const cryptoKey = await window.crypto.subtle.importKey(
+            "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+        );
+        const signature = await window.crypto.subtle.sign("HMAC", cryptoKey, timeBytes);
+        const sigBytes = new Uint8Array(signature);
+        const offset = sigBytes[sigBytes.length - 1] & 0xf;
+        const binary = ((sigBytes[offset] & 0x7f) << 24) |
+                       ((sigBytes[offset + 1] & 0xff) << 16) |
+                       ((sigBytes[offset + 2] & 0xff) << 8) |
+                       (sigBytes[offset + 3] & 0xff);
+        let otp = (binary % 1000000).toString();
+        while (otp.length < 6) { otp = "0" + otp; }
+
+        document.getElementById('code').value = otp;
+        showToast('Code TOTP calculé et renseigné : ' + otp, 'success');
+    }
+</script>
+{% endblock %}
+

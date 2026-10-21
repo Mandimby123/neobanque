@@ -1,0 +1,59 @@
+<div id="card-toggles-{{ card.id }}" class="space-y-4">
+    <!-- Paiements en ligne -->
+    <div class="flex items-center justify-between p-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 rounded-xl bg-slate-900 text-brand-400">
+                <i data-lucide="globe" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <div class="text-xs font-semibold text-white">Paiements sur Internet (E-commerce)</div>
+                <div class="text-[11px] text-slate-400">Autoriser les achats sur sites marchands avec 3D-Secure</div>
+            </div>
+        </div>
+        <form hx-post="/cards/{{ card.id }}/toggle-setting" hx-target="#card-toggles-{{ card.id }}" hx-swap="outerHTML">
+            <input type="hidden" name="setting_name" value="online">
+            <button type="submit" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {% if card.online_payments_enabled %}bg-brand-500{% else %}bg-slate-700{% endif %}">
+                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {% if card.online_payments_enabled %}translate-x-5{% else %}translate-x-0{% endif %}"></span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Paiements à l'étranger -->
+    <div class="flex items-center justify-between p-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 rounded-xl bg-slate-900 text-teal-400">
+                <i data-lucide="plane" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <div class="text-xs font-semibold text-white">Paiements et Retraits à l'Étranger</div>
+                <div class="text-[11px] text-slate-400">Autoriser les transactions hors zone euro et devises tierces</div>
+            </div>
+        </div>
+        <form hx-post="/cards/{{ card.id }}/toggle-setting" hx-target="#card-toggles-{{ card.id }}" hx-swap="outerHTML">
+            <input type="hidden" name="setting_name" value="foreign">
+            <button type="submit" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {% if card.foreign_payments_enabled %}bg-brand-500{% else %}bg-slate-700{% endif %}">
+                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {% if card.foreign_payments_enabled %}translate-x-5{% else %}translate-x-0{% endif %}"></span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Paiements sans contact -->
+    <div class="flex items-center justify-between p-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 rounded-xl bg-slate-900 text-amber-400">
+                <i data-lucide="rss" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <div class="text-xs font-semibold text-white">Paiement Sans Contact (NFC)</div>
+                <div class="text-[11px] text-slate-400">Sans saisie du code PIN jusqu'à 50,00 € par transaction</div>
+            </div>
+        </div>
+        <form hx-post="/cards/{{ card.id }}/toggle-setting" hx-target="#card-toggles-{{ card.id }}" hx-swap="outerHTML">
+            <input type="hidden" name="setting_name" value="contactless">
+            <button type="submit" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {% if card.contactless_enabled %}bg-brand-500{% else %}bg-slate-700{% endif %}">
+                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {% if card.contactless_enabled %}translate-x-5{% else %}translate-x-0{% endif %}"></span>
+            </button>
+        </form>
+    </div>
+</div>
+

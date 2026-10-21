@@ -1,0 +1,48 @@
+# ==============================================================================
+# RENDER BLUEPRINT (Infrastructure as Code - render.yaml)
+# Déploiement automatisé en 1 clic sur Render (Web Service + Managed PostgreSQL)
+# ==============================================================================
+
+services:
+  - type: web
+    name: neobank-portal
+    runtime: python
+    region: frankfurt  # Région Europe Centrale (Faible latence France/SEPA)
+    plan: free         # Modifiable en 'starter' pour la haute disponibilité
+    buildCommand: ./render-build.sh
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 2
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_NAME
+        value: neobank_session
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CARD_ENCRYPTION_KEY
+        value: HooHd-zYeuRqjmfbcvL3fQBr8WaHls8mVISfaIhen5A=
+      - key: USE_MOCK_BANKING
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: neobank-postgres
+          property: connectionString
+      - key: DEFAULT_BANK_CODE
+        value: "30004"
+      - key: DEFAULT_BRANCH_CODE
+        value: "02050"
+      - key: DEFAULT_BIC
+        value: NEOBFRPPXXX
+
+databases:
+  - name: neobank-postgres
+    region: frankfurt
+    plan: free
+    databaseName: neobank
+    user: neouser
+

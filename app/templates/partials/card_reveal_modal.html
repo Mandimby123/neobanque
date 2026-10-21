@@ -1,0 +1,106 @@
+<div id="card-reveal-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+    <div class="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl space-y-6">
+        
+        <!-- Header & Countdown -->
+        <div class="flex items-start justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-brand-500/10 rounded-xl text-brand-400 border border-brand-500/20">
+                    <i data-lucide="eye" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white tracking-tight">Coordonnées Carte Révélées</h3>
+                    <p class="text-xs text-slate-400">Authentification 2FA TOTP validée &bull; PCI-DSS Tier 1</p>
+                </div>
+            </div>
+            
+            <button onclick="document.getElementById('card-reveal-modal').remove()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Auto-Mask Countdown Alert -->
+        <div class="p-3 bg-amber-950/60 border border-amber-800/80 rounded-xl text-xs text-amber-300 flex items-center justify-between">
+            <span class="flex items-center space-x-2">
+                <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
+                <span>Masquage automatique de sécurité :</span>
+            </span>
+            <span id="reveal-countdown" class="font-mono font-bold text-amber-200 bg-amber-900/60 px-2 py-0.5 rounded">15s</span>
+        </div>
+
+        <!-- Sensitive Fields Display -->
+        <div class="space-y-4 bg-slate-950 p-5 rounded-2xl border border-slate-800 font-mono">
+            <!-- Full PAN -->
+            <div>
+                <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-sans font-semibold mb-1">
+                    Numéro de Carte (PAN)
+                </label>
+                <div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
+                    <span class="text-base font-bold text-brand-400 tracking-widest select-all">{{ full_pan }}</span>
+                    <button onclick="copyToClipboard('{{ full_pan }}', 'Numéro de carte')" type="button" class="text-slate-400 hover:text-white p-1" title="Copier PAN">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expiry & CVV -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-sans font-semibold mb-1">
+                        Date d'expiration
+                    </label>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 text-sm font-bold text-white">
+                        {{ expiry }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase tracking-wider text-slate-500 font-sans font-semibold mb-1">
+                        Cryptogramme (CVV)
+                    </label>
+                    <div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <span class="text-sm font-bold text-brand-400 tracking-wider select-all">{{ cvv }}</span>
+                        <button onclick="copyToClipboard('{{ cvv }}', 'Cryptogramme CVV')" type="button" class="text-slate-400 hover:text-white p-1" title="Copier CVV">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Button Masquer Immédiatement -->
+        <div>
+            <button 
+                type="button" 
+                onclick="document.getElementById('card-reveal-modal').remove()" 
+                class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors flex items-center justify-center space-x-2">
+                <i data-lucide="eye-off" class="w-4 h-4"></i>
+                <span>Masquer les numéros maintenant</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Minuteur de sécurité automatique de 15 secondes
+    (function() {
+        let secondsLeft = 15;
+        const countdownEl = document.getElementById('reveal-countdown');
+        const modal = document.getElementById('card-reveal-modal');
+
+        const interval = setInterval(() => {
+            secondsLeft--;
+            if (countdownEl) {
+                countdownEl.textContent = `${secondsLeft}s`;
+            }
+            if (secondsLeft <= 0) {
+                clearInterval(interval);
+                if (modal && modal.parentNode) {
+                    modal.remove();
+                    showToast('Numéros de carte automatiquement masqués', 'info');
+                }
+            }
+        }, 1000);
+    })();
+</script>
+
