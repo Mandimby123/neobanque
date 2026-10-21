@@ -1,5 +1,6 @@
-from contextlib import asynccontextmanager
+import os
 import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
@@ -112,5 +113,7 @@ app.include_router(dashboard.router)
 app.include_router(transfers.router)
 app.include_router(cards.router)
 
-# Montage des fichiers statiques
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Montage sécurisé des fichiers statiques (avec création automatique si absent)
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
